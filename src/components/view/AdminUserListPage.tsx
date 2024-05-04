@@ -80,7 +80,6 @@ export const AdminUserListPage = () => {
   };
 
   useEffect(() => {
-<<<<<<< Updated upstream
     console.log('cat', category);
     fetch(`http://localhost:8080/admin/user`)
       .then((res) => {
@@ -92,10 +91,6 @@ export const AdminUserListPage = () => {
         setData(json.result.content);
       });
   }, [category]);
-=======
-    fetchUsers();
-  }, []);
->>>>>>> Stashed changes
 
   return (
     <table className='min-w-full text-left text-sm font-light text-surface dark:text-white'>
@@ -122,51 +117,8 @@ export const AdminUserListPage = () => {
             <td>{item.userRole}</td>
             <td>{item.userJoinDate.toString()}</td>
           </tr>
-<<<<<<< Updated upstream
         ))}
       </tbody>
     </table>
-=======
-        </thead>
-        <tbody className=' overflow-y-scroll'>
-          {users?.map((item, index) => (
-            <tr
-              key={item.userId}
-              className='border-b border-neutral-200 dark:border-white/10 h-16 text-center items-center even:bg-stone-50'
-            >
-              <td>{index + 1}</td>
-              <td>{item.userId}</td>
-              <td>
-                <div className='max-w-20 truncate whitespace-nowrap'>
-                  {item.userPw}
-                </div>
-              </td>
-              <td>
-                <div className='truncate'>{item.userName}</div>
-              </td>
-              <td>
-                <div className='truncate'>{item.userPoint}</div>
-              </td>
-              <td>{item.userRole}</td>
-              <td>{item.userJoinDate.toString()}</td>
-              <td>
-                <div className='flex flex-col gap-1 min-h-full content-center'>
-                  <button className='border border-stone-300 bg-white  rounded-lg'>
-                    수정
-                  </button>
-                  <button
-                    className='border border-stone-300 bg-white rounded-lg'
-                    onClick={() => onDelete(item.userId)}
-                  >
-                    삭제
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
->>>>>>> Stashed changes
   );
 };
