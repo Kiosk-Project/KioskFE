@@ -1,6 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
-import { Nav } from './Nav';
 import { LandingPage } from './components/view/LandingPage';
 import { LoginPage } from './components/view/LoginPage';
 import { RegistrationPage } from './components/view/RegistrationPage';
@@ -14,6 +13,8 @@ import { PlaceSelectionPage } from './components/view/placeSelectionPage';
 import { AdminPage } from './components/view/AdminPage';
 import OrderRecommend from './components/view/OrderRecommend';
 import { AdminUserListPage } from './components/view/AdminUserListPage';
+import { AdminProductListPage } from './components/view/AdminProductListPage';
+import { AdminOrderListPage } from './components/view/AdminOrderListPage';
 
 function App() {
   return (
@@ -36,6 +37,8 @@ function App() {
             {/* <Route index element={<AdminPageList />} /> */}
             {/* <Route path=':category' element={<AdminPageList />} /> */}
             <Route path='user' element={<AdminUserListPage />} />
+            <Route path='product' element={<AdminProductListPage />} />
+            <Route path='order' element={<AdminOrderListPage />} />
           </Route>
         </Routes>
       </StorageProvider>

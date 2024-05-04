@@ -1,10 +1,5 @@
 import clsx from 'clsx';
-import React, {
-  ForwardedRef,
-  forwardRef,
-  useImperativeHandle,
-  useState,
-} from 'react';
+import { ForwardedRef, forwardRef, useImperativeHandle, useState } from 'react';
 import { PAGE } from './components/view/AdminPage';
 
 export interface NavigationHandler {
@@ -24,7 +19,6 @@ export const Nav = forwardRef((_, ref: ForwardedRef<NavigationHandler>) => {
   return (
     <>
       <div className='flex sticky top-0 bg-white h-20  shadow-sm justify-center pb-3'>
-        {/* <div className='flex sticky top-0 bg-white h-20 border-b-2  justify-center pb-3'> */}
         <div
           className={clsx(
             'grid grid-cols-4',

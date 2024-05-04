@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 type UserRole = 'USER' | 'ADMIN';
 
@@ -44,7 +43,6 @@ export const AdminUserListPage = () => {
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ category: 'BURGER_SET', page: 0 }),
         }
       );
 
@@ -68,7 +66,6 @@ export const AdminUserListPage = () => {
       const data: Message = await response.json();
       const { status, message, result } = data;
       if (status == 'USER_LIST_FOUND_SUCCESS') {
-        console.log('content : ', result);
         setUsers(result.content);
       } else {
         alert(message);

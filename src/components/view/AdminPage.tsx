@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { Nav, NavigationHandler } from '../../Nav';
 

@@ -1,7 +1,6 @@
 import { setStorage } from './setStorage';
 export function getStorage<T>(KEY: string, DefaultData: T) {
   const storedData = localStorage.getItem(KEY);
-  console.log('getStorage함수 : ', { storedData });
 
   if (storedData == 'undefined') {
     return DefaultData;
