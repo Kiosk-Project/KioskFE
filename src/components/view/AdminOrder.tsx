@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { OrderStatus } from './ui/OrderStatus';
 
 export const AdminOrder = () => {
   const [data, setData] = useState<OrderList[] | null>(null);
@@ -48,9 +49,31 @@ export const AdminOrder = () => {
     navigate(`/admin/order?text=${text}&type=${searchType}`);
   };
 
+  const onDeleteClick = (order: OrderList) => {
+    if (window.confirm('삭제하시겠습니까?')) {
+      fetch(`${API}/${order.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      })
+        .then((res) => {
+          return res.json();
+        })
+        .then((json) => {
+          setData(json.result);
+          alert(json.message);
+          fetchData();
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    } else {
+      return false;
+    }
+  };
+
   const goOrderEdit = (order: OrderList) => {
     // TODO: 라우터 주문 상세 수정 구현
-    navigate(`/admin/order/${order.id}`);
+    navigate(`/admin/order2/${order.id}`);
   };
 
   return (
@@ -89,13 +112,27 @@ export const AdminOrder = () => {
               <table className='min-w-full divide-y divide-gray-200'>
                 <thead className='bg-gray-50'>
                   <tr>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>번호</td>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>주문 금액</td>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>회원 아이디</td>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>주문상태</td>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>주문일시</td>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>수정</td>
-                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>삭제</td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      번호
+                    </td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      주문 금액
+                    </td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      회원 아이디
+                    </td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      주문상태
+                    </td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      주문일시
+                    </td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      수정
+                    </td>
+                    <td className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                      삭제
+                    </td>
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
@@ -104,7 +141,9 @@ export const AdminOrder = () => {
                       <td className='px-6 py-4 whitespace-nowrap'>
                         {index + 1}
                       </td>
-                      <td>{order.orderListTotatlPrice}</td>
+                      <td className='text-right'>
+                        ￦ {order.orderListTotatlPrice.toLocaleString()}
+                      </td>
                       <td>{order.userId}</td>
                       <td>{order.orderListStatus}</td>
                       <td>{order.orderListTime}</td>
@@ -119,7 +158,7 @@ export const AdminOrder = () => {
                       <td>
                         <button
                           className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded'
-                          onClick={() => goOrderEdit(order)}
+                          onClick={() => onDeleteClick(order)}
                         >
                           삭제
                         </button>

@@ -3,8 +3,7 @@ export function getStorage<T>(KEY: string, DefaultData: T) {
   const storedData = localStorage.getItem(KEY);
   console.log('getStorage함수 : ', { storedData });
 
-  if (storedData == undefined) {
-    setStorage<T>(KEY, DefaultData);
+  if (storedData == 'undefined') {
     return DefaultData;
   }
 
@@ -12,5 +11,6 @@ export function getStorage<T>(KEY: string, DefaultData: T) {
     return JSON.parse(storedData) as T;
   }
 
+  setStorage<T>(KEY, DefaultData);
   return DefaultData;
 }

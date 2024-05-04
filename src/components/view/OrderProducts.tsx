@@ -2,41 +2,54 @@ import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import { useStorage } from '../context/storage-context';
 import { useNavigate } from 'react-router-dom';
+import { Product } from './AdminPageList';
+import { useCount } from '../util/use-count';
+import { ProductBox } from '../util/ProductBox';
+import { getTotalPrice } from '../util/getTotalPrice';
+import { getStorage } from '../util/getStorage';
 
-interface ProductsByCategoryDto {
-  productId: number;
-  productName: string;
-  productPrice: number;
-  productImgUrl: string;
+enum CATEGORY {
+  BURGER_SET = 'BURGER_SET',
+  BURGER_SINGLE = 'BURGER_SINGLE',
+  DESSERT = 'DESSERT',
+  DRINK = 'DRINK',
+  HAPPY_MEAL = 'HAPPY_MEAL',
+  RECOMMENDED = 'RECOMMENDED',
 }
 
-interface ProductsResDto {
-  productDtos: ProductsByCategoryDto[];
-  userName: string;
-  orderListTotalAmount: number;
-  orderListTotalPrice: number;
+interface Message {
+  status: string;
+  code: string;
+  message: string;
+  result: Product[];
 }
 
 const OrderProducts = () => {
   const navigation = useNavigate();
   const {
-    storage: { token },
+    storage: { token, cart },
+    setOrders,
+    emptyCart,
   } = useStorage();
-  const [data, setData] = useState<ProductsResDto | null>(null);
-  const [category, setCategory] = useState<string | null>('BURGER_SET');
-  const [page, setPage] = useState(0);
-  const [orderListId, setOrderListId] = useState<number | null>(20);
-  const [productDtos, setProductDtos] = useState<
-    ProductsByCategoryDto[] | null
-  >(null);
+
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [category, setCategory] = useState<CATEGORY>(CATEGORY.BURGER_SET);
+  const [page, setPage] = useState<number>(0);
+  const [myCart, setMyCart] = useState<Order[]>([]);
+  const [totalCount, updateCount] = useCount(0);
 
   useEffect(() => {
-    if (category === 'RECOMMENDED') {
+    if (category == CATEGORY.RECOMMENDED) {
       fetchRecommendData();
     } else {
       fetchData();
     }
-  }, [category, page, orderListId]);
+  }, [category, page]);
+
+  useEffect(() => {
+    const stored = getStorage<Order[]>('cart', []);
+    setMyCart(stored);
+  }, [cart, navigation]);
 
   // 카테고리 별 메뉴 출력
   const fetchData = () => {
@@ -46,16 +59,19 @@ const OrderProducts = () => {
       body: JSON.stringify({
         category: category,
         page: page,
-        orderListId: orderListId,
       }),
     })
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json.result);
+      .then((res) => {
+        return res.json();
       })
-      .catch((err) => {
-        console.error(err);
-      });
+      .then((json) => {
+        const message: Message = json;
+        const { status, result: products } = message;
+        if (status == 'PRODUCT_CHECK_SUCCESS') {
+          setProducts(products);
+        }
+      })
+      .catch((err) => console.error(err));
   };
 
   // 추천 메뉴 눌렀을 때 랜덤 메뉴 출력
@@ -63,28 +79,73 @@ const OrderProducts = () => {
     fetch('http://localhost:8080/order/recommend', {
       method: 'POST',
     })
-      .then((res) => res.json())
-      .then((json) => {
-        setData((prevData) => ({
-          ...prevData!,
-          productDtos: json.result,
-        }));
+      .then((res) => {
+        return res.json();
       })
-      .catch((err) => {
-        console.error(err);
+      .then((json) => {
+        console.log(json.result);
+        setProducts(json.result);
       });
   };
 
-  if (!data) {
-    return <div>Loading...</div>;
-  }
+  const addItem = (product: Product) => {
+    const newOrder: Order = {
+      orderId: totalCount,
+      product: { ...product },
+      productAmount: 1,
+      totalPrice: product.productPrice,
+    };
+
+    setMyCart((pre) => [...pre, newOrder]);
+    updateCount(1);
+  };
+
+  const addAmount = (orderIndex: number) => {
+    const order: Order = myCart[orderIndex];
+
+    const newAmount = ++order.productAmount;
+    const newOrder: Order = { ...order, productAmount: newAmount };
+
+    setMyCart((pre) => [
+      ...pre.slice(0, orderIndex),
+      newOrder,
+      ...pre.slice(orderIndex + 1),
+    ]);
+  };
+
+  const subAmount = (orderIndex: number) => {
+    const order: Order = myCart[orderIndex];
+
+    if (order.productAmount == 1) {
+      setMyCart((pre) => [
+        ...pre.slice(0, orderIndex),
+        ...pre.slice(orderIndex + 1),
+      ]);
+      return;
+    }
+    const newAmount = --order.productAmount;
+    const newOrder: Order = { ...order, productAmount: newAmount };
+
+    setMyCart((pre) => [
+      ...pre.slice(0, orderIndex),
+      newOrder,
+      ...pre.slice(orderIndex + 1),
+    ]);
+  };
+
+  const emptyMyCart = () => {
+    setMyCart([]);
+  };
 
   return (
-    <div className='flex flex-col max-w-screen-sm sm min-h-screen  justify-between mx-auto'>
-      <img
-        src='https://img.insight.co.kr/static/2021/04/13/700/img_20210413151511_h3uakchh.webp'
-        alt='title'
-      ></img>
+    <div className='flex flex-col max-w-screen-sm sm min-h-screen  justify-between mx-auto pb-2'>
+      <div>
+        <img
+          src='https://img.insight.co.kr/static/2021/04/13/700/img_20210413151511_h3uakchh.webp'
+          alt='title'
+          className='object-fill w-full h-20'
+        ></img>
+      </div>
 
       <div
         style={{
@@ -93,7 +154,7 @@ const OrderProducts = () => {
           alignItems: 'center',
         }}
       >
-        <h2 className='text-xl my-3'>
+        <h2 className='text-md my-3'>
           {token && <span style={{ color: 'red' }}>{token.userId}</span>}{' '}
           {token &&
             `님
@@ -103,7 +164,7 @@ const OrderProducts = () => {
           onClick={() => {
             navigation('/placeselection');
           }}
-          className='bg-mcblack text-white text-lg font-bold rounded-lg px-8 m-2'
+          className='bg-mcblack text-white text-md font-bold rounded-lg px-8 m-2'
         >
           이전
         </button>
@@ -112,109 +173,101 @@ const OrderProducts = () => {
       <div>
         <div className='grid grid-cols-12'>
           <div className='flex flex-col col-span-3 gap-2'>
-            <span className=' text-mcblack font-sans rounded-lg py-2 '>
+            <span className=' text-mcblack font-sans rounded-lg py-1 '>
               You are here with{' '}
               <strong className='text-xl text-mcyellow'>Mcdonald</strong>
             </span>
             <span className='bg-mcred h-0.5'></span>
             <button
               onClick={() => {
-                setCategory('RECOMMENDED');
+                setCategory(CATEGORY.RECOMMENDED);
                 setPage(0);
               }}
-              className={clsx('font-bold rounded-lg py-5', {
-                'drop-shadow-lg bg-white': category != 'RECOMMENDED',
-                'bg-mcred text-white ': category == 'RECOMMENDED',
+              className={clsx('font-bold rounded-lg py-3 text-sm', {
+                'drop-shadow-lg bg-white': category != CATEGORY.RECOMMENDED,
+                'bg-mcred text-white ': category == CATEGORY.RECOMMENDED,
               })}
             >
               추천 메뉴
             </button>
             <button
               onClick={() => {
-                setCategory('BURGER_SET');
+                setCategory(CATEGORY.BURGER_SET);
                 setPage(0);
               }}
-              className={clsx('font-bold rounded-lg py-5', {
-                'drop-shadow-lg bg-white': category != 'BURGER_SET',
-                'bg-mcred text-white ': category == 'BURGER_SET',
+              className={clsx('font-bold rounded-lg py-3 text-sm', {
+                'drop-shadow-lg bg-white': category != CATEGORY.BURGER_SET,
+                'bg-mcred text-white ': category == CATEGORY.BURGER_SET,
               })}
             >
               버거 & 세트
             </button>
             <button
               onClick={() => {
-                setCategory('BURGER_SINGLE');
+                setCategory(CATEGORY.BURGER_SINGLE);
                 setPage(0);
               }}
-              className={clsx('font-bold rounded-lg py-5', {
-                'drop-shadow-lg bg-white': category != 'BURGER_SINGLE',
-                'bg-mcred text-white ': category == 'BURGER_SINGLE',
+              className={clsx('font-bold rounded-lg py-3 text-sm', {
+                'drop-shadow-lg bg-white': category != CATEGORY.BURGER_SINGLE,
+                'bg-mcred text-white ': category == CATEGORY.BURGER_SINGLE,
               })}
             >
               단품
             </button>
             <button
               onClick={() => {
-                setCategory('HAPPY_MEAL');
+                setCategory(CATEGORY.HAPPY_MEAL);
                 setPage(0);
               }}
-              className={clsx('font-bold rounded-lg py-5', {
-                'drop-shadow-lg bg-white': category != 'HAPPY_MEAL',
-                'bg-mcred text-white ': category == 'HAPPY_MEAL',
+              className={clsx('font-bold rounded-lg py-3 text-sm', {
+                'drop-shadow-lg bg-white': category != CATEGORY.HAPPY_MEAL,
+                'bg-mcred text-white ': category == CATEGORY.HAPPY_MEAL,
               })}
             >
               해피밀
             </button>
             <button
               onClick={() => {
-                setCategory('DESSERT');
+                setCategory(CATEGORY.DESSERT);
                 setPage(0);
               }}
-              className={clsx('font-bold rounded-lg py-5', {
-                'drop-shadow-lg bg-white': category != 'DESSERT',
-                'bg-mcred text-white ': category == 'DESSERT',
+              className={clsx('font-bold rounded-lg py-3 text-sm', {
+                'drop-shadow-lg bg-white': category != CATEGORY.DESSERT,
+                'bg-mcred text-white ': category == CATEGORY.DESSERT,
               })}
             >
               디저트
             </button>
             <button
               onClick={() => {
-                setCategory('DRINK');
+                setCategory(CATEGORY.DRINK);
                 setPage(0);
               }}
-              className={clsx('font-bold rounded-lg py-5', {
-                'drop-shadow-lg bg-white': category != 'DRINK',
-                'bg-mcred text-white ': category == 'DRINK',
+              className={clsx('font-bold rounded-lg py-3 text-sm', {
+                'drop-shadow-lg bg-white': category != CATEGORY.DRINK,
+                'bg-mcred text-white ': category == CATEGORY.DRINK,
               })}
             >
               음료
             </button>
           </div>
           <div className='col-span-9 border-2 border-mcred p-2 rounded-lg ml-2'>
-            <div className='grid grid-cols-3 min-h-full gap-2 '>
-              {data.productDtos?.map((product, index) => (
-                <div
-                  key={index}
-                  className='flex flex-col shadow-md shadow-slate-200 bg-white rounded-lg justify-self-center min-w-full'
-                >
-                  <div style={{ height: '100px' }}>
-                    <img
-                      src={product.productImgUrl}
-                      alt={product.productName}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'fill',
-                      }}
-                    />
-                  </div>
-
-                  <div className=''>
-                    <p>{product.productName}</p>
-                    <p>{product.productPrice}원</p>
-                  </div>
-                </div>
-              ))}
+            <div className='grid grid-cols-3 gap-2 p-2 '>
+              {!products ? (
+                <span className='self-center'>isloading</span>
+              ) : (
+                products?.map((product, index) => (
+                  <button
+                    key={product.productCode}
+                    className='flex flex-col items-center shadow-md shadow-slate-200 bg-white rounded-lg w-32 h-32'
+                    onClick={() => {
+                      addItem(product);
+                    }}
+                  >
+                    <ProductBox product={product} key={index} id={index} />
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -222,7 +275,7 @@ const OrderProducts = () => {
 
       <div className='flex justify-center m-2 gap-5'>
         <button
-          className='border border-stone-300 px-5 py-1 rounded-lg'
+          className='border border-stone-300 px-5 py-1 rounded-lg text-sm'
           disabled={page === 0}
           onClick={() => setPage(page - 1)}
         >
@@ -230,7 +283,7 @@ const OrderProducts = () => {
         </button>
         <span>{page}</span>
         <button
-          className='border border-stone-300 px-5 py-1 rounded-lg'
+          className='border border-stone-300 px-5 py-1 rounded-lg text-sm'
           onClick={() => setPage(page + 1)}
         >
           다음
@@ -238,7 +291,7 @@ const OrderProducts = () => {
       </div>
 
       <div
-        className='my-3'
+        className='my-1'
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -250,31 +303,84 @@ const OrderProducts = () => {
         }}
       >
         <div>
-          <p className='mx-3'>주문 내역</p>
+          <p className='mx-3 text-md'>주문 내역</p>
         </div>
         <div>
-          <p className='mx-3'>
-            총 가격: {data.orderListTotalPrice}원 수량:{' '}
-            {data.orderListTotalAmount}
+          <p className='mx-3 text-md'>
+            총 가격: 원 수량: {getTotalPrice(myCart).toLocaleString()}
           </p>
         </div>
       </div>
 
-      <div style={{ textAlign: 'right' }}>
-        <button type='button' className='font-bold'>
+      <div
+        style={{ textAlign: 'right' }}
+        className='px-5 h-24 overflow-y-scroll'
+      >
+        <table className='min-w-full text-start text-sm'>
+          <tbody>
+            {myCart?.map((item, index) => (
+              <tr key={item.orderId} className='flex justify-between'>
+                <td>{index + 1}</td>
+                <td>{item.product.productName}</td>
+                <td>{item.product.productPrice} 원</td>
+                <td>
+                  <button
+                    className='border border-slate-300 rounded-lg px-2'
+                    onClick={() => subAmount(index)}
+                  >
+                    -
+                  </button>
+                  <span className='mx-2'>{item.productAmount}</span>
+                  <button
+                    className='border border-slate-300 rounded-lg px-2'
+                    onClick={() => addAmount(index)}
+                  >
+                    +
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+          type='button'
+          className='font-bold text-sm'
+          onClick={() => {
+            navigation('/order/detail');
+          }}
+        >
           주문 상세보기
         </button>
         <br />
-        <button className='bg-mcblack text-white px-5 py-1 rounded-lg'>
+        <button
+          className='bg-mcblack text-white px-5 rounded-lg text-sm'
+          onClick={() => emptyMyCart()}
+        >
           비우기
         </button>
       </div>
 
-      <div className='grid grid-cols-2 mt-2 gap-1'>
-        <button className='bg-red-500 text-white text-lg font-bold rounded-lg w-full'>
+      <div className='grid grid-cols-2 mt-1 gap-1'>
+        <button
+          className='bg-red-500 text-white font-bold rounded-lg w-full'
+          onClick={() => {
+            emptyCart();
+            navigation('/placeselection');
+          }}
+        >
           주문 취소
         </button>
-        <button className='bg-green-700 text-white text-lg font-bold rounded-lg w-full'>
+        <button
+          className='bg-green-700 text-white font-bold rounded-lg w-full'
+          onClick={() => {
+            setOrders(myCart);
+            if (myCart.length == 0) {
+              alert('상품을 선택해주세요');
+              return;
+            }
+            navigation('/order/recommend');
+          }}
+        >
           주문 완료
         </button>
       </div>

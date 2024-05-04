@@ -1,8 +1,9 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
+import { Nav, NavigationHandler } from '../../Nav';
 
-enum PAGE {
+export enum PAGE {
   USER = 'user',
   PRODUCT = 'product',
   ORDER = 'order',
@@ -53,53 +54,67 @@ export const AdminPage = () => {
     dispatch({ type: PAGE.USER });
     navigation('/admin/user');
   }, []);
+
+  const navigationHandlerRef = useRef<NavigationHandler>(null);
   return (
     <>
-      <div className='flex w-full min-h-screen justify-center mx-auto bg-gradient-to-br from-pink-50 via-rose-100 to-indigo-200'>
-        <div className='grid w-4/6 grid-cols-8 justify-center content-start py-16'>
-          <div className='col-span-8 rounded-3xl content-center text-end bg-gradient-to-br from-white  via-white to-slate-50 mb-10 py-5 px-10'>
-            Admin Page
+      <Nav ref={navigationHandlerRef} />
+
+      <div className='flex flex-col w-full sm min-h-screen items-center'>
+        <div className='grid grid-cols-12 mt-5 w-3/4 '>
+          <div className='col-span-12 flex flex-col min-h-10 text-start py-7 pl-14 mb-5 border-b-2 border-mcblack'>
+            <span className='text-2xl font-medium '>관리자 페이지</span>
+            <span className='text-stone-300'>
+              Mcdonald | Admin | <u>{page}</u>
+            </span>
           </div>
-          <div className='flex flex-col col-span-1 gap-2'>
+
+          <div className='col-span-2 flex flex-col divide-y'>
+            <span className='text-end px-3 py-2 font-semibold'>카테고리</span>
             <button
               type='button'
-              onClick={() => onRoutePage(PAGE.USER)}
-              //   className='bg-white text-rose-400 rounded-full py-2 hover:bg-indigo-100'
-              className={clsx({
-                'rounded-full py-2': true,
-                'bg-white text-rose-400 rounded-full  hover:bg-indigo-100':
+              onClick={() => {
+                onRoutePage(PAGE.USER);
+                navigationHandlerRef.current?.onSwitchCategory(PAGE.USER);
+              }}
+              className={clsx('py-2 px-3', 'font-thin text-end', 'rounded-md', {
+                'bg-white text-mcred text-semibold  hover:bg-slate-200':
                   page != 'user',
-                'bg-rose-400 text-white rounded-full ': page == 'user',
+                'bg-mcblack text-white': page == 'user',
               })}
             >
               User
             </button>
             <button
               type='button'
-              onClick={() => onRoutePage(PAGE.PRODUCT)}
-              className={clsx({
-                'rounded-full py-2': true,
-                'bg-white text-rose-400 rounded-full  hover:bg-indigo-100':
+              onClick={() => {
+                onRoutePage(PAGE.PRODUCT);
+                navigationHandlerRef.current?.onSwitchCategory(PAGE.PRODUCT);
+              }}
+              className={clsx('py-2 px-3', 'font-thin text-end', 'rounded-md', {
+                'bg-white text-mcred text-semibold  hover:bg-slate-200':
                   page != 'product',
-                'bg-rose-400 text-white rounded-full ': page == 'product',
+                'bg-mcblack text-white ': page == 'product',
               })}
             >
               Product
             </button>
             <button
               type='button'
-              onClick={() => onRoutePage(PAGE.ORDER)}
-              className={clsx({
-                'rounded-full py-2': true,
-                'bg-white text-rose-400 rounded-full  hover:bg-indigo-100':
+              onClick={() => {
+                onRoutePage(PAGE.ORDER);
+                navigationHandlerRef.current?.onSwitchCategory(PAGE.ORDER);
+              }}
+              className={clsx('py-2 px-3', 'font-thin text-end', 'rounded-md', {
+                'bg-white text-mcred text-semibold  hover:bg-slate-200':
                   page != 'order',
-                'bg-rose-400 text-white rounded-full ': page == 'order',
+                'bg-mcblack text-white': page == 'order',
               })}
             >
               Order
             </button>
           </div>
-          <div className='col-span-7 bg-white ml-5 rounded-3xl p-10'>
+          <div className='col-span-10 bg-white ml-5 rounded-3xl p-5'>
             <Outlet />
           </div>
         </div>

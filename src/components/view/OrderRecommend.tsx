@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Row, Col } from 'react-bootstrap';
-
-interface RecommendProductDto {
-  id: number;
-  productName: string;
-  productPrice: number;
-  productImgUrl: string;
-}
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { McFrame } from '../util/mcFrame';
+import { ProductBox } from '../util/ProductBox';
+import { Product } from './AdminUserListPage';
+import { useStorage } from '../context/storage-context';
+import { getTotalPrice } from '../util/getTotalPrice';
 
 const OrderRecommend = () => {
-  const [data, setData] = useState<RecommendProductDto[] | null>(null);
+  const navigation = useNavigate();
+  const [data, setData] = useState<Product[]>([]);
+
+  const {
+    storage: { cart },
+    addOrder,
+  } = useStorage();
 
   useEffect(() => {
     fetchData();
@@ -28,31 +32,58 @@ const OrderRecommend = () => {
       });
   };
 
-  if (!data) {
-    return <div>Loading...</div>;
-  }
+  const addItem = (product: Product) => {
+    addOrder(product, 1);
+    const totalPrice = getTotalPrice(cart);
+    alert(
+      '상품 추가되었습니다.\n 총 결제 금액은 ' +
+        (totalPrice + product.productPrice).toLocaleString() +
+        ' 원 입니다'
+    );
+    navigation('/order/payment');
+  };
 
   return (
-    <div>
-      <h1>함께 즐기시면 더욱 좋습니다!</h1>
+    <McFrame color='yellow'>
+      <span className='font-bold text-2xl text-mcblack'>
+        함께 즐기시면 더욱 좋습니다!
+      </span>
       <br />
 
-      <Row>
-        {data.map((product, index) => (
-          <Col md={4} key={index}>
-            <div className='text-center'>
-              <img src={product.productImgUrl} alt={product.productName} />
-              <p>{product.productName}</p>
-              <p>{product.productPrice}원</p>
-            </div>
-          </Col>
-        ))}
-      </Row>
+      <div className='grid grid-cols-3 gap-2 place-items-center max-h-96'>
+        {data ? (
+          data.map((product, index) => (
+            <button
+              key={index}
+              className='flex flex-col items-center shadow-md shadow-slate-200 bg-white rounded-lg w-32 h-32'
+              onClick={() => {
+                addItem(product);
+              }}
+            >
+              <ProductBox product={product} key={index} />
+            </button>
+          ))
+        ) : (
+          <span>isLoading</span>
+        )}
+      </div>
 
       <br />
-      <Button className='mx-3'>이전</Button>
-      <Button>선택안함</Button>
-    </div>
+      <div className='flex gap-2 justify-center'>
+        <button
+          className='bg-mcblack px-8 text-white rounded-lg'
+          onClick={() => history.back()}
+        >
+          이전
+        </button>
+        <button
+          className='bg-mcred px-8 text-white rounded-lg'
+          onClick={() => navigation('/order/payment')}
+        >
+          선택안함
+        </button>
+      </div>
+    </McFrame>
   );
 };
 

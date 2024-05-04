@@ -1,7 +1,12 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const LandingPage = () => {
   const navigation = useNavigate();
+
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
   return (
     <div className='flex max-w-screen-sm sm min-h-screen bg-white justify-center mx-auto'>
       <button

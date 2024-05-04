@@ -1,8 +1,15 @@
 type OrderList = {
   id: number;
   orderListTime: string;
-  orderListTotatlPrice: number;
+  orderListTotalPrice: number;
   orderListStatus: string;
   userId: number;
   orderItems: Order;
+};
+
+type Order = {
+  orderId: number;
+  product: Product;
+  productAmount: number;
+  totalPrice: number;
 };
