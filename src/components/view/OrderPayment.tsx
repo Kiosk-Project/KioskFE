@@ -1,41 +1,68 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStorage } from '../util/getStorage';
+import { useStorage } from '../context/storage-context';
+import { getTotalPrice } from '../util/getTotalPrice';
 
 interface PaymentResDto {
   orderItemTotalAmount: number;
   orderListTotalPrice: number;
 }
 
+type OrderList = {
+  id: number;
+  orderListTime: string;
+  orderListTotalPrice: number;
+  orderListStatus: string;
+  userId: number;
+  orderItems: Order;
+};
+
 const OrderPayment = () => {
   const navigation = useNavigate();
-  const [data, setData] = useState<PaymentResDto | null>(null);
-  const [orderListId, setOrderListId] = useState<number | null>(null);
+
+  const [cart, setCart] = useState(() => getStorage<Order[]>('cart', []));
+  const {
+    storage: { token },
+  } = useStorage();
 
   useEffect(() => {
-    // Todo: OrderListID 받아오기
-    setOrderListId(20);
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-    if (orderListId !== null) {
-      fetchData();
-    }
-  }, [orderListId]);
+    setTimeout(
+      () =>
+        (async function () {
+          try {
+            const data = {
+              orderList: cart,
+              userId: token?.userId,
+            };
 
-  const fetchData = () => {
-    fetch('http://localhost:8080/order/payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderListId: orderListId,
-      }),
-    })
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json.result);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  };
+            console.log('data', data);
+            const response = await fetch(
+              'http://localhost:8080/order/payment2',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+                signal: signal, // Pass the signal to the fetch request
+              }
+            );
+
+            const json = await response.json();
+            if (json.status === 'ORDER_LIST_PAYMENT_SUCCESS') {
+              alert('결제 성공');
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        })(),
+      3000
+    );
+
+    return () => controller.abort();
+  }, [cart, token]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -46,7 +73,7 @@ const OrderPayment = () => {
   return (
     <div className='flex flex-col max-w-screen-sm sm min-h-screen bg-mcred justify-between mx-auto p-20'>
       <div className='flex flex-col gap-2 bg-white rounded-3xl px-2 py-10 pt-2'>
-        {!data ? (
+        {!cart ? (
           <span>isLoading...</span>
         ) : (
           <div>
@@ -54,8 +81,8 @@ const OrderPayment = () => {
 
             <br />
             <p>
-              총 수량: {data.orderItemTotalAmount}개 총 가격:{' '}
-              {data.orderListTotalPrice}원
+              총 수량: {cart.length}개 총 가격:{' '}
+              {getTotalPrice(cart).toLocaleString()}원
             </p>
             <br />
             <p>카드를 화살표 방향으로 투입구에 넣어주세요.</p>

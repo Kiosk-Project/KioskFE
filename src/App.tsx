@@ -1,6 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
-import { Nav } from './Nav';
 import { LandingPage } from './components/view/LandingPage';
 import { LoginPage } from './components/view/LoginPage';
 import { RegistrationPage } from './components/view/RegistrationPage';
@@ -13,7 +12,10 @@ import { PlaceSelectionPage } from './components/view/placeSelectionPage';
 
 import { AdminPage } from './components/view/AdminPage';
 import OrderRecommend from './components/view/OrderRecommend';
-import { AdminUserListPage } from './components/view/AdminUserListPage';
+import { AdminUserListPage } from './components/view/admin/AdminUserListPage';
+import { AdminOrderListPage } from './components/view/AdminOrderListPage';
+import { AdminUserEditPage } from './components/view/admin/AdminUserEditPage';
+import OrderDetail from './components/view/OrderDetail';
 
 function App() {
   return (
@@ -29,13 +31,15 @@ function App() {
           <Route path='/order/payment' element={<OrderPayment />} />
           <Route path='/order/submit' element={<OrderSubmit />} />
           <Route path='/order/recommend' element={<OrderRecommend />} />
-          {/* <Route path='/order/detail' element={<OrderDetail />} /> */}
+          <Route path='/order/detail' element={<OrderDetail />} />
           <Route path='/order/payment' element={<OrderPayment />} />
           <Route path='/order/submit' element={<OrderSubmit />} />
           <Route path='/admin/*' element={<AdminPage />}>
             {/* <Route index element={<AdminPageList />} /> */}
             {/* <Route path=':category' element={<AdminPageList />} /> */}
             <Route path='user' element={<AdminUserListPage />} />
+            <Route path='user/:userId' element={<AdminUserEditPage />} />
+            <Route path='order' element={<AdminOrderListPage />} />
           </Route>
         </Routes>
       </StorageProvider>

@@ -346,7 +346,8 @@ const OrderProducts = () => {
           type='button'
           className='font-bold text-sm'
           onClick={() => {
-            navigation('/order/detail');
+            setOrders(myCart);
+            navigation(`/order/detail`);
           }}
         >
           주문 상세보기

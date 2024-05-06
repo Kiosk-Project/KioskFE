@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { McFrame } from '../util/mcFrame';
 import { ProductBox } from '../util/ProductBox';
-import { Product } from './AdminUserListPage';
+import { Product } from './admin/AdminUserListPage';
 import { useStorage } from '../context/storage-context';
 import { getTotalPrice } from '../util/getTotalPrice';
 

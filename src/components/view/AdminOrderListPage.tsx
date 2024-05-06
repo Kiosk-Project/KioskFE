@@ -1,8 +1,7 @@
 import { FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { OrderStatus } from './ui/OrderStatus';
 
-export const AdminOrder = () => {
+export const AdminOrderListPage = () => {
   const [data, setData] = useState<OrderList[] | null>(null);
   const [searchType, setSearchType] = useState('all');
   const navigate = useNavigate();
@@ -16,6 +15,7 @@ export const AdminOrder = () => {
   useEffect(() => {
     fetchData();
   }, [location.search]);
+
   const fetchData = () => {
     fetch(`${API}${location.search}`, {
       method: 'GET',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 type UserRole = 'USER' | 'ADMIN';
 
@@ -36,6 +36,7 @@ interface Message {
 
 export const AdminUserListPage = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const navigation = useNavigate();
 
   const onDelete = async (userId: string) => {
     try {
@@ -43,8 +44,6 @@ export const AdminUserListPage = () => {
         `http://localhost:8080/admin/user/${userId}`,
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ category: 'BURGER_SET', page: 0 }),
         }
       );
 
@@ -58,8 +57,12 @@ export const AdminUserListPage = () => {
     } catch (err) {
       console.error(err);
     } finally {
-      fetchUsers();
+      window.location.reload();
     }
+  };
+
+  const onEdit = (userId: string) => {
+    navigation(`${userId}`);
   };
 
   const fetchUsers = async () => {
@@ -120,7 +123,10 @@ export const AdminUserListPage = () => {
               <td>{item.userJoinDate.toString()}</td>
               <td>
                 <div className='flex flex-col gap-1 min-h-full content-center'>
-                  <button className='border border-stone-300 bg-white  rounded-lg'>
+                  <button
+                    className='border border-stone-300 bg-white  rounded-lg'
+                    onClick={() => onEdit(item.userId)}
+                  >
                     수정
                   </button>
                   <button
